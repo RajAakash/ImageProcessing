@@ -555,6 +555,14 @@ class ViTIQA(nn.Module):
         backbone.heads = nn.Identity()
         self.backbone = backbone
 
+         # 👉 ADD IT HERE (freeze most layers)
+        for name, param in self.backbone.named_parameters():
+            if not any(layer in name for layer in [
+                "encoder.layers.6", "encoder.layers.7",
+                "encoder.layers.8", "encoder.layers.9",
+                "encoder.layers.10", "encoder.layers.11"]):
+                param.requires_grad = False
+
         self.head = nn.Sequential(
             nn.Linear(embed_dim, 256),
             nn.GELU(),
@@ -563,7 +571,7 @@ class ViTIQA(nn.Module):
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(64, 1),
-            nn.Sigmoid(),
+            # nn.Sigmoid(),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -774,7 +782,7 @@ def parse_args():
                    help="Path to annotation XLSX (auto-detected if omitted)")
     p.add_argument("--epochs",   type=int, default=50)
     p.add_argument("--batch",    type=int, default=32)
-    p.add_argument("--lr",       type=float, default=1e-4)
+    p.add_argument("--lr",       type=float, default=3e-5)
     p.add_argument("--dropout",  type=float, default=0.3)
     p.add_argument("--workers",  type=int, default=4)
     p.add_argument("--seed",     type=int, default=42)
@@ -822,7 +830,7 @@ def main():
     cfg = {
         "epochs"      : args.epochs,
         "lr"          : args.lr,
-        "weight_decay": 1e-4,
+        "weight_decay": 1e-3,
         "patience"    : 10,
         "ckpt"        : args.ckpt,
     }
